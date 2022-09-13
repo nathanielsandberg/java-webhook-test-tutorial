@@ -17,6 +17,9 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import org.json.*;
 
+import com.okta.jwt.*;
+import java.time.Duration;
+
 public class HelloWorld extends HttpServlet{
 
     public HelloWorld(){
@@ -24,22 +27,46 @@ public class HelloWorld extends HttpServlet{
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,IOException{
-        PrintWriter healthCheckResponse = response.getWriter();
-        StringBuilder buffer = new StringBuilder();
-        BufferedReader reader = request.getReader();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            buffer.append(line);
-            buffer.append(System.lineSeparator());
+        String authorizationHeader = request.getHeader("Authorization");
+
+        try{
+            AccessTokenVerifier jwtVerifier = JwtVerifiers.accessTokenVerifierBuilder()
+                .setIssuer("https://identity-dev.fortellis.io/oauth2/aus1ni5i9n9WkzcYa2p7")
+                .setAudience("api_providers")
+                .setConnectionTimeout(Duration.ofSeconds(1))
+                .build();
+            Jwt jwt = jwtVerifier.decode(authorizationHeader.replace("Bearer", ""));
+
+            System.out.println("This is the authentication decoded: " + jwt);
+            System.out.println("This is the subject decode: " + jwt.getClaims().get("sub"));
+            if(jwt.getClaims().get("sub").equals("GphAezlnwtOAuuT7q8uN3hMjDYjGal0V")){
+                System.out.println("The strings are equal.");
+            }else{
+                throw new ServletException("You must have the same subject in your token");
+            }
+
+            PrintWriter healthCheckResponse = response.getWriter();
+            StringBuilder buffer = new StringBuilder();
+            BufferedReader reader = request.getReader();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line);
+                buffer.append(System.lineSeparator());
+            }
+            String data = buffer.toString();
+            System.out.println("This is your request: "+ data);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_ACCEPTED);
+            healthCheckResponse.print("");
+            healthCheckResponse.flush();
+            newAsynchronousAPIPost(data);
+        
+        }catch(Exception e){
+            System.out.println("You had a problem with the token.");
         }
-        String data = buffer.toString();
-        System.out.println("This is your request: "+ data);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpServletResponse.SC_ACCEPTED);
-        healthCheckResponse.print("");
-        healthCheckResponse.flush();
-        newAsynchronousAPIPost(data);
+
+        
     }
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException,IOException{
         ClassLoader classLoader = getClass().getClassLoader();

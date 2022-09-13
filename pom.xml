@@ -37,6 +37,17 @@
         <artifactId>json</artifactId>
         <version>20180130</version>
     </dependency>
+    <dependency>
+      <groupId>com.okta.jwt</groupId>
+      <artifactId>okta-jwt-verifier</artifactId>
+      <version>0.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.okta.jwt</groupId>
+      <artifactId>okta-jwt-verifier-impl</artifactId>
+      <version>0.5.1</version>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
   <build>
     <finalName>webhookEndpointTest-2</finalName>
